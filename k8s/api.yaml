@@ -19,6 +19,27 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
+
+          # Readiness = “mag ik verkeer krijgen?”
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+          # Liveness = “ben ik kapot? -> restart”
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+
           env:
             - name: MONGO_URL
               value: "mongodb://mongo:27017/webstack"
