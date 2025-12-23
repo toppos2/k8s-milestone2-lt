@@ -5,6 +5,18 @@
 </head>
 <body>
   <h1>Kubernetes Webstack</h1>
-  <p>Naam wordt opgehaald via API</p>
+  <p><b>Naam:</b> <span id="user">Loading...</span></p>
+
+  <script>
+    fetch("http://localhost:8000/name")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("user").innerText = data.name;
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("user").innerText = "Error";
+      });
+  </script>
 </body>
 </html>
