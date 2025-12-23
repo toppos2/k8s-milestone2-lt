@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: webstack-lt
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/toppos2/k8s-milestone2.git
+    targetRevision: main
+    path: k8s
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: webstack-lt
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
