@@ -8,6 +8,10 @@ RUN apt-get update \
 # Copy website
 COPY index.html /var/www/html/index.html
 COPY assets /var/www/html/assets
+
+# 🔥 EIGEN CONFIG
+COPY lighttpd.conf /etc/lighttpd/lighttpd.conf
+
 # Expose HTTP
 EXPOSE 80
 
