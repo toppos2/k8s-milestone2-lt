@@ -1,22 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
-  <title>Milestone 2</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milestone 2 — Kubernetes Webstack LT</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-  <h1>Kubernetes Webstack</h1>
-  <p><b>Naam:</b> <span id="user">Loading...</span></p>
+  <div class="container">
+    <header>
+      <h1>Milestone 2 — Kubernetes Webstack</h1>
+      <p class="subtitle">
+        Frontend: <b>lighttpd</b> • API: <b>FastAPI</b> • DB: <b>MongoDB</b> • Student: <b>Leander Tops</b>
+      </p>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Live status (via API)</h2>
+
+        <div class="kv">
+          <span class="k">Naam uit DB</span>
+          <span class="v" id="user">Loading…</span>
+        </div>
+
+        <div class="kv">
+          <span class="k">API container-id (load balancing)</span>
+          <span class="v" id="cid">Loading…</span>
+        </div>
+
+        <div class="kv">
+          <span class="k">Health</span>
+          <span class="v" id="health">Loading…</span>
+        </div>
+
+        <div class="badge" id="badge">
+          <span class="dot warn"></span>
+          <span id="badgeText">Checking…</span>
+        </div>
+
+        <p><small>Tip: refresh de pagina om de nieuwe naam te zien nadat je MongoDB update.</small></p>
+      </section>
+
+      <section class="card">
+        <h2>Fases (wat ik heb gedaan)</h2>
+        <ul>
+          <li><b>Fase 1:</b> Docker images gebouwd: frontend (lighttpd), api (FastAPI), mongo (official image)</li>
+          <li><b>Fase 2:</b> Kind cluster opgezet (kind-lt) + namespaces</li>
+          <li><b>Fase 3:</b> Deployments + services + ingress (host: webstack-lt.local)</li>
+          <li><b>Fase 4:</b> DB update → API leest nieuwe naam → frontend toont na refresh</li>
+          <li><b>Fase 5:</b> Load balancing: 2 API pods + container-id endpoint</li>
+          <li><b>Fase 6:</b> GitOps: ArgoCD applicatie synced/healthy</li>
+          <li><b>Fase 7:</b> Monitoring: Prometheus + Grafana in namespace monitoring</li>
+        </ul>
+        <p><small>HTTPS met cert-manager is (nog) niet gedaan.</small></p>
+      </section>
+
+      <section class="card">
+        <h2>Wat ik heb / niet heb</h2>
+        <div class="kv"><span class="k">Ingress routing</span><span class="v">✅ Ja</span></div>
+        <div class="kv"><span class="k">ArgoCD GitOps</span><span class="v">✅ Ja</span></div>
+        <div class="kv"><span class="k">Prometheus/Grafana</span><span class="v">✅ Ja</span></div>
+        <div class="kv"><span class="k">HTTPS (cert-manager)</span><span class="v">❌ Nee</span></div>
+        <div class="kv"><span class="k">Extra worker node</span><span class="v">⚠️ Alleen als cluster multi-node is</span></div>
+      </section>
+    </div>
+
+    <div class="footer">
+      Hostname routing werkt via ingress (Host header: <b>webstack-lt.local</b>).<br/>
+      Als je via 127.0.0.1 gaat, moet je de juiste host gebruiken of je hosts-file laten kloppen.
+    </div>
+  </div>
 
   <script>
-   fetch("/api/name")
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("user").innerText = data.name;
-      })
-      .catch(err => {
-        console.error(err);
+    async function loadJson(url){
+      const res = await fetch(url);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    async function refresh(){
+      try{
+        const nameData = await loadJson("/api/name");
+        document.getElementById("user").innerText = nameData.name ?? "N/A";
+
+        const idData = await loadJson("/api/container-id");
+        document.getElementById("cid").innerText = idData.container_id ?? "N/A";
+
+        const hData = await loadJson("/api/health");
+        document.getElementById("health").innerText = hData.status ?? "ok";
+
+        document.getElementById("badge").innerHTML =
+          `<span class="dot ok"></span><span>OK — API bereikbaar</span>`;
+      }catch(e){
+        document.getElementById("badge").innerHTML =
+          `<span class="dot bad"></span><span>ERROR — check ingress/Host header</span>`;
         document.getElementById("user").innerText = "Error";
-      });
+        document.getElementById("cid").innerText = "Error";
+        document.getElementById("health").innerText = "Error";
+      }
+    }
+
+    refresh();
   </script>
 </body>
 </html>
